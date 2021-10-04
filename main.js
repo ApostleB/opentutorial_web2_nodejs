@@ -10,7 +10,7 @@ function templateHTML(title, list, body) {
             <title>WEB1 - ${title}</title>
             <meta charset="utf-8">
           </head>
-          <body>
+          <body style="background-color: black; color:white;">
             <h1><a href="/">WEB</a></h1>
             ${list}
             ${body}
@@ -23,7 +23,7 @@ function templateList(filelist) {
     var list = "<ul>";
     var i = 0;
     while (i < filelist.length) {
-        list = list + `<li><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+        list = list + `<li style="font-color:000"><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
         i = i + 1;
     }
     list = list + "</ul>";
