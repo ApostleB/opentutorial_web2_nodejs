@@ -3,8 +3,9 @@ var fs = require("fs");
 var url = require("url");
 let qs = require('querystring')
 
-function templateHTML(title, list, body, control) {
-	return `
+let template = {
+	HTML: function (title, list, body, control) {
+		return `
           <!doctype html>
           <html>
           <head>
@@ -19,20 +20,19 @@ function templateHTML(title, list, body, control) {
           </body>
           </html>
           `;
-} {
-	/* <a href="/create">"create"</a> <a href="/update">"update"</a> */
+	},
+	List: function (filelist) {
+		var list = "<ul>";
+		var i = 0;
+		while (i < filelist.length) {
+			list = list + `<li style="font-color:000"><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
+			i = i + 1;
+		}
+		list = list + "</ul>";
+		return list;
+	}
 }
 
-function templateList(filelist) {
-	var list = "<ul>";
-	var i = 0;
-	while (i < filelist.length) {
-		list = list + `<li style="font-color:000"><a href="/?id=${filelist[i]}">${filelist[i]}</a></li>`;
-		i = i + 1;
-	}
-	list = list + "</ul>";
-	return list;
-}
 
 //request = 요청시에 브라우저가 보낸 정보
 //response = 응답시에 브라우저로 보낸 정보
@@ -47,15 +47,15 @@ var app = http.createServer(function (request, response) {
 			fs.readdir("./data", function (error, filelist) {
 				var title = "Welcome";
 				var description = "Hello, Node.js";
-				var list = templateList(filelist)
-				var template = templateHTML(
+				var List = template.List(filelist)
+				var html = template.HTML(
 					title,
-					list,
+					List,
 					`<h2>${title}</h2>${description}`,
 					`<a href="/create">create</a>`
 				);
 				response.writeHead(200);
-				response.end(template);
+				response.end(html);
 			});
 		} else {
 			fs.readdir("./data", function (error, filelist) {
@@ -66,8 +66,8 @@ var app = http.createServer(function (request, response) {
 				fs.readFile(`data/${queryData.id}`, "utf8", function (err, description) {
 					var title = queryData.id;
 
-					var list = templateList(filelist);
-					var template = templateHTML(
+					var list = template.List(filelist);
+					var html = template.HTML(
 						title,
 						list,
 						`<h2>${title}</h2>${description}`,
@@ -80,7 +80,7 @@ var app = http.createServer(function (request, response) {
 						`
 					);
 					response.writeHead(200);
-					response.end(template);
+					response.end(html);
 				});
 			});
 		}
@@ -90,8 +90,8 @@ var app = http.createServer(function (request, response) {
 		console.log("글 생성");
 		fs.readdir("./data", function (error, filelist) {
 			var title = "WEB - create";
-			var list = templateList(filelist);
-			var template = templateHTML(
+			var list = template.List(filelist);
+			var html = template.HTML(
 				title,
 				list,
 				`<form action="/create_process" method="post">
@@ -101,7 +101,7 @@ var app = http.createServer(function (request, response) {
                 </form>
                 `, '');
 			response.writeHead(200);
-			response.end(template);
+			response.end(html);
 		});
 	}
 	//글 생성 프로세스
@@ -141,8 +141,8 @@ var app = http.createServer(function (request, response) {
 			fs.readFile(`data/${queryData.id}`, "utf8", function (err, description) {
 				var title = queryData.id;
 
-				var list = templateList(filelist);
-				var template = templateHTML(
+				var list = template.List(filelist);
+				var html = template.HTML(
 					title,
 					list,
 					`
@@ -156,7 +156,7 @@ var app = http.createServer(function (request, response) {
 					`<a href="/create">create</a> <a href="/update?id=${title}">update</a>`
 				);
 				response.writeHead(200);
-				response.end(template);
+				response.end(html);
 			});
 		});
 	}
@@ -192,7 +192,7 @@ var app = http.createServer(function (request, response) {
 				}
 			})
 		});
-	} 
+	}
 	//delete process
 	else if (pathname === '/delete_process') {
 		let body = "";
@@ -204,10 +204,12 @@ var app = http.createServer(function (request, response) {
 			let post = qs.parse(body);
 			let id = post.id;
 			fs.unlink(`data/${id}`, (err) => {
-				if(err){
+				if (err) {
 					console.log('delete ERROR');
 				}
-				response.writeHead(302, {Location: `/`});
+				response.writeHead(302, {
+					Location: `/`
+				});
 				response.end();
 			})
 		});
